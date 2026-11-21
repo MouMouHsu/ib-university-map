@@ -93,7 +93,7 @@ pre,.scroll{overflow-x:auto}
   <div class="wrap">
     <h1>IB 文憑生的全球大學申請地圖</h1>
     <p>輸入預估 IB 總分、想讀的領域與每年預算，即時篩出英、美、加、澳、港、新、日、歐 31 所承認 IB 的大學，看分數落點、學費、生活費與截止日。</p>
-    <div class="meta">資料整理日：2026-11-21，以 2027 年入學為目標。學費為國際生每年金額；標示「官方」者已對照官網，標示「估」者為參考值，請以官網為準。</div>
+    <div class="meta">資料整理日：2026-11-21，以 2027 年入學為目標。學費為國際生每年金額，台幣金額依頁面下方的假設匯率換算；標示「官方」者已對照官網，標示「估」者為參考值，請以官網為準。</div>
     <div class="urgent" id="urgent"></div>
   </div>
 </header>
@@ -113,7 +113,7 @@ pre,.scroll{overflow-x:auto}
       <label class="l" for="budget">每年總預算上限 (新台幣，學費＋生活費)</label>
       <div class="big"><span id="budgetV">不限</span></div>
       <input id="budget" type="range" min="500000" max="4000000" step="100000" value="4000000">
-      <div class="small">以學費下限＋生活費估算；匯率可在頁面下方調整。</div>
+      <div class="small">以學費下限＋生活費估算。<span id="rateNote"></span></div>
     </div>
     <div>
       <label class="l" for="q">搜尋校名、城市或課程</label>
@@ -167,10 +167,10 @@ pre,.scroll{overflow-x:auto}
  </div>
 </section>
 
-<section class="band" style="background:var(--panel)">
+<section class="band" id="rates-sec" style="background:var(--panel)">
  <div class="wrap">
   <h2>匯率設定 (1 單位外幣＝多少新台幣)</h2>
-  <p class="small">預設值為概估，請依當天銀行牌告更新；修改後預算與花費會即時重算，並保存在這台裝置的瀏覽器。</p>
+  <p class="small">預設值為 2026-11-21 的假設匯率 (概估值，非銀行牌告)：1 英鎊 42、1 美元 32、1 加幣 23、1 澳幣 21、1 港幣 4.1、1 新幣 24.5、1 日圓 0.21、1 歐元 37 新台幣。請依當天銀行牌告更新；修改後預算與花費會即時重算，並保存在這台裝置的瀏覽器。</p>
   <div class="rates" id="rates"></div>
  </div>
 </section>
@@ -294,7 +294,7 @@ function urgent(){const s=U.filter(u=>{const d=days(u);return d>=0&&d<=14}).sort
  $('#urgent').style.display=s.length?'flex':'none'}
 
 function render(){const L=list();store.set('state',S);
- $('#scoreV').textContent=S.score;$('#budgetV').textContent=S.budget>=4000000?'不限':fmtT(S.budget)+' 元';
+ $('#scoreV').textContent=S.score;$('#rateNote').innerHTML='台幣金額依假設匯率換算 (目前：'+Object.keys(rate).map(c=>c+' '+rate[c]).join('、')+')，可在<a href="#rates-sec">頁面下方</a>調整。';$('#budgetV').textContent=S.budget>=4000000?'不限':fmtT(S.budget)+' 元';
  $('#count').textContent=`符合條件：${L.length} 所`;
  $('#cards').innerHTML=L.length?L.map(card).join(''):'<div class="empty">沒有符合的學校。試著放寬預算、領域或落點條件。</div>';
  overview(L);timeline(L);
@@ -309,7 +309,7 @@ function detail(u){const f=fit(u),[c0,c1]=cost(u);
  <tr><td>可選領域</td><td>${u.f.map(x=>FLD[x]).join('、')}</td></tr>
  <tr><td>國際生學費/年</td><td>${fmtL(u.t[0],u.cur)}${u.t[1]!==u.t[0]?' – '+fmtL(u.t[1],u.cur):''} ${badge(u.t[2])}（${u.ty}）</td></tr>
  <tr><td>生活費/年</td><td>${fmtL(u.l[0],u.cur)} ${badge(u.l[1])}<br><span class="small">${u.ln}</span></td></tr>
- <tr><td>每年合計 (台幣)</td><td><b>${fmtT(c0)}${c1>c0+5000?' – '+fmtT(c1):''} 元</b><br><span class="small">四年概估約 ${fmtT(c0*4)}${c1>c0+5000?' – '+fmtT(c1*4):''} 元 (未計漲幅)</span></td></tr>
+ <tr><td>每年合計 (台幣)</td><td><b>${fmtT(c0)}${c1>c0+5000?' – '+fmtT(c1):''} 元</b><br><span class="small">假設匯率 1 ${u.cur} = ${rate[u.cur]} 新台幣；四年概估約 ${fmtT(c0*4)}${c1>c0+5000?' – '+fmtT(c1*4):''} 元 (未計漲幅)</span></td></tr>
  <tr><td>申請截止</td><td>${u.dl.replace(/-/g,'/')}・${u.dln}</td></tr>
  <tr><td>注意事項</td><td>${u.x||'—'}</td></tr></tbody></table>
  <p style="margin-top:16px"><a href="${u.url}" target="_blank" rel="noopener">前往官網核對 2027 入學資訊 →</a></p>`;
@@ -319,7 +319,7 @@ function compare(){const us=S.cmp.map(i=>U.find(u=>u.id===i));const row=(h,fn)=>
  $('#mBody').innerHTML=`<h2 id="mTitle">比較 ${us.length} 所學校</h2><div class="scroll" style="margin-top:14px"><table><thead><tr><th>項目</th>${us.map(u=>`<th>${u.z}</th>`).join('')}</tr></thead><tbody>
  ${row('落點',u=>`<b style="color:${FIT[fit(u)][1]}">${FIT[fit(u)][0]}</b>`)}${row('IB 要求',u=>(u.ib?u.ib[0]+'–'+u.ib[1]+' 分<br>':'')+`<span class="small">${u.hl}</span>`)}
  ${row('學費/年',u=>fmtL(u.t[0],u.cur)+(u.t[1]!==u.t[0]?'–'+fmtL(u.t[1],u.cur):'')+badge(u.t[2]))}${row('生活費/年',u=>fmtL(u.l[0],u.cur)+badge(u.l[1]))}
- ${row('合計台幣/年',u=>`<b class="num">${fmtT(cost(u)[0])}${cost(u)[1]>cost(u)[0]+5000?'–'+fmtT(cost(u)[1]):''} 元</b>`)}${row('截止日',u=>u.dl.replace(/-/g,'/'))}
+ ${row('合計台幣/年',u=>`<b class="num">${fmtT(cost(u)[0])}${cost(u)[1]>cost(u)[0]+5000?'–'+fmtT(cost(u)[1]):''} 元</b>`)}${row('假設匯率',u=>`1 ${u.cur} = ${rate[u.cur]} 新台幣`)}${row('截止日',u=>u.dl.replace(/-/g,'/'))}
  ${row('授課語言',u=>u.en)}${row('特色',u=>u.p)}${row('官網',u=>`<a href="${u.url}" target="_blank" rel="noopener">開啟</a>`)}</tbody></table></div>`;
  $('#modal').classList.add('on');$('#mClose').focus()}
 

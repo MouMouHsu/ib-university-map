@@ -52,7 +52,7 @@ button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{ou
 .card .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
 .card .zh{font-size:13px;color:var(--mute)}
 .stampx{flex:none;border:2px solid currentColor;border-radius:8px;padding:2px 8px;font-weight:700;font-size:13px;transform:rotate(-4deg);white-space:nowrap}
-.kv{display:grid;grid-template-columns:5em minmax(0,1fr);gap:4px 10px;font-size:14px}
+.kv{display:grid;grid-template-columns:6.5em minmax(0,1fr);gap:4px 10px;font-size:14px}
 .kv dt{color:var(--mute)}.kv dd{margin:0}
 .num{font-variant-numeric:tabular-nums;white-space:nowrap}
 .tag{display:inline-block;font-size:12px;background:var(--sea2);color:var(--ink);border-radius:6px;padding:1px 7px;margin:0 4px 4px 0}
@@ -274,7 +274,7 @@ function card(u){const f=fit(u),[c0,c1]=cost(u),d=days(u),on=S.cmp.includes(u.id
  <dl class="kv"><dt>IB 要求</dt><dd>${u.ib?`<b class="num">${u.ib[0]}–${u.ib[1]} 分</b>，`:''}${u.hl}</dd>
  <dt>學費/年</dt><dd><span class="num">${t}</span>${badge(u.t[2])}<div class="small">${u.ty}</div></dd>
  <dt>生活費/年</dt><dd><span class="num">${fmtL(u.l[0],u.cur)}</span>${badge(u.l[1])}</dd>
- <dt>合計台幣</dt><dd><b class="num">${fmtT(c0)}${c1>c0+5000?'–'+fmtT(c1):''} 元</b></dd>
+ <dt>合計台幣/年</dt><dd><b class="num">${fmtT(c0)}${c1>c0+5000?'–'+fmtT(c1):''} 元</b></dd>
  <dt>截止日</dt><dd><span class="num">${u.dl.replace(/-/g,'/')}</span>${d<0?'<span class="st closed">已截止</span>':d<=14?`<span class="st soon">剩 ${d} 天</span>`:''}</dd></dl>
  <div>${u.f.map(x=>`<span class="tag">${FLD[x]}</span>`).join('')}</div>
  <div class="acts"><button class="btn" type="button" data-d="${u.id}">詳細資料</button><button class="btn ghost" type="button" data-c="${u.id}" aria-pressed="${on}">${on?'已加入比較':'加入比較'}</button></div></article>`}

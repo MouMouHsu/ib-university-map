@@ -1,0 +1,345 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>IB 大學申請地圖</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
+<style>
+/* VOICE: 冷靜、可信的升學顧問手冊，給家長與學生一起翻閱
+   IDEA: 護照與登機證——每所大學是一張「目的地票卡」，蓋上適配印章
+   PICTURE: 頂部的區域適配長條圖＋即時篩選結果，本身就是主畫面
+   COLOUR and TYPE: 紙白底、墨黑字、海洋藍為主、朱紅印章為強調；Noto Serif TC 標題 + Noto Sans TC 內文
+   LAYOUT: 上方條件面板與區域總覽，下方票卡清單，再往下為截止日時間軸、匯率與資料來源 */
+:root{color-scheme:light dark;
+--bg:light-dark(#fbfaf7,#11151c);--panel:light-dark(#ffffff,#18202b);--ink:light-dark(#161a22,#eef1f5);
+--mute:light-dark(#5b6270,#a3acba);--line:light-dark(#e3e0d8,#2b3544);--sea:light-dark(#1f5fa8,#6ea8ec);
+--sea2:light-dark(#e6eef8,#1b2c44);--stamp:light-dark(#d83d22,#ff7a5c);
+--ok:light-dark(#1f7a4d,#5fd39a);--match:light-dark(#1f5fa8,#6ea8ec);--reach:light-dark(#b86b00,#f2b35a);--far:light-dark(#8a8f99,#7d8594);--hol:light-dark(#7a4aa8,#b892e6)}
+:root[data-theme=light]{color-scheme:light}:root[data-theme=dark]{color-scheme:dark}
+*{box-sizing:border-box;min-width:0}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.6 "Noto Sans TC",system-ui,sans-serif;overflow-x:clip}
+h1,h2,h3{font-family:"Noto Serif TC",serif;line-height:1.15;text-wrap:balance;margin:0}
+h1{font-size:clamp(30px,4.6vw,48px);font-weight:900}h2{font-size:clamp(24px,3vw,32px)}h3{font-size:19px}
+a{color:var(--sea)}
+.band{padding:clamp(24px,4vw,56px) max(5vw,16px)}.wrap{max-width:1240px;margin:0 auto}
+.hero{background:var(--sea);color:#fff;padding-bottom:clamp(28px,4vw,48px)}
+.hero p{color:#dfe9f6;max-width:70ch;margin:10px 0 0}
+.hero .meta{font-size:13px;color:#c9daf0;margin-top:6px}
+.urgent{margin-top:16px;background:#fff;color:#161a22;border-radius:10px;padding:12px 16px;display:flex;gap:12px;align-items:flex-start;max-width:900px}
+.urgent b{color:#d83d22}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px;margin-top:-28px;position:relative;box-shadow:0 6px 24px rgba(0,0,0,.08)}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+label.l{display:block;font-weight:700;font-size:14px;margin-bottom:6px}
+.big{font-family:"Noto Serif TC",serif;font-size:clamp(28px,4vw,40px);font-weight:900;color:var(--sea);line-height:1}
+input[type=range]{width:100%;height:44px;accent-color:var(--sea)}
+input[type=search],input[type=number],select{width:100%;font:16px "Noto Sans TC",sans-serif;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);min-height:44px}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{border:1px solid var(--line);background:var(--bg);color:var(--ink);border-radius:999px;padding:8px 14px;font:14px "Noto Sans TC",sans-serif;min-height:40px;cursor:pointer}
+.chip[aria-pressed=true]{background:var(--sea);border-color:var(--sea);color:#fff}
+button:focus-visible,input:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid var(--stamp);outline-offset:2px}
+.small{font-size:13px;color:var(--mute)}
+.overview{display:grid;grid-template-columns:minmax(0,1fr);gap:10px;margin-top:22px}
+.orow{display:grid;grid-template-columns:7.5em minmax(0,1fr) 3em;gap:10px;align-items:center;font-size:14px}
+.obar{display:flex;height:22px;border-radius:6px;overflow:hidden;background:var(--sea2)}
+.obar span{display:block;height:100%}
+.legend{display:flex;flex-wrap:wrap;gap:14px;font-size:13px;color:var(--mute);margin-top:6px}
+.dot{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:middle}
+.bar{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin:26px 0 14px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:10px;position:relative}
+.card .top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.card .zh{font-size:13px;color:var(--mute)}
+.stampx{flex:none;border:2px solid currentColor;border-radius:8px;padding:2px 8px;font-weight:700;font-size:13px;transform:rotate(-4deg);white-space:nowrap}
+.kv{display:grid;grid-template-columns:5em minmax(0,1fr);gap:4px 10px;font-size:14px}
+.kv dt{color:var(--mute)}.kv dd{margin:0}
+.num{font-variant-numeric:tabular-nums;white-space:nowrap}
+.tag{display:inline-block;font-size:12px;background:var(--sea2);color:var(--ink);border-radius:6px;padding:1px 7px;margin:0 4px 4px 0}
+.est{font-size:11px;color:var(--reach);border:1px solid currentColor;border-radius:4px;padding:0 4px;margin-left:4px;white-space:nowrap}
+.off{font-size:11px;color:var(--ok);border:1px solid currentColor;border-radius:4px;padding:0 4px;margin-left:4px;white-space:nowrap}
+.acts{display:flex;gap:8px;margin-top:auto}
+.btn{font:14px "Noto Sans TC",sans-serif;border-radius:10px;padding:9px 14px;min-height:44px;border:1px solid var(--sea);background:var(--sea);color:#fff;cursor:pointer}
+.btn.ghost{background:transparent;color:var(--sea)}
+.btn[aria-pressed=true]{background:var(--stamp);border-color:var(--stamp);color:#fff}
+.empty{padding:40px;text-align:center;color:var(--mute);border:1px dashed var(--line);border-radius:14px}
+table{border-collapse:collapse;width:100%;font-size:14px}
+th,td{border-bottom:1px solid var(--line);padding:9px 10px;text-align:left;vertical-align:top}
+th{font-size:13px;color:var(--mute);font-weight:500}
+td.r{text-align:right}
+.tl{list-style:none;padding:0;margin:0;display:grid;gap:0}
+.tl li{display:grid;grid-template-columns:7.5em minmax(0,1fr);gap:14px;padding:12px 0;border-bottom:1px solid var(--line)}
+.tl .d{font-family:"Noto Serif TC",serif;font-weight:700;font-size:18px;white-space:nowrap}
+.st{font-size:12px;border-radius:6px;padding:1px 7px;margin-left:6px;white-space:nowrap}
+.st.closed{background:var(--sea2);color:var(--far)}.st.soon{background:var(--stamp);color:#fff}.st.open{background:var(--sea2);color:var(--sea)}
+.tray{position:sticky;bottom:0;background:var(--ink);color:var(--bg);padding:12px max(5vw,16px);display:none;gap:12px;align-items:center;justify-content:space-between;flex-wrap:wrap;z-index:5}
+.tray.on{display:flex}
+.modal{position:fixed;inset:0;background:rgba(10,14,20,.55);display:none;align-items:flex-start;justify-content:center;padding:4vh 12px;z-index:10;overflow-y:auto}
+.modal.on{display:flex}
+.sheet{background:var(--panel);color:var(--ink);border-radius:16px;max-width:860px;width:100%;padding:clamp(18px,3vw,30px);position:relative}
+.x{position:absolute;top:10px;right:10px;width:44px;height:44px;border-radius:50%;border:1px solid var(--line);background:var(--bg);color:var(--ink);font-size:20px;cursor:pointer}
+.tips{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px}
+.tip{border-top:3px solid var(--sea);padding-top:10px}
+.tip p{margin:6px 0 0;font-size:15px}
+.rates{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+pre,.scroll{overflow-x:auto}
+@media(max-width:600px){table{font-size:13px}.stack thead{display:none}.stack tr{display:grid;padding-block:10px}.stack td{display:flow-root;border:0;padding:3px 0;padding-inline-start:8em;text-align:start}.stack td::before{content:attr(data-l);float:inline-start;width:7.5em;margin-inline-start:-8em;white-space:normal;color:var(--mute)}.stack td:empty{display:none}.orow{grid-template-columns:5.5em minmax(0,1fr) 2.4em}.tl li{grid-template-columns:minmax(0,1fr)}}
+@media(prefers-reduced-motion:no-preference){.card{transition:transform .15s}.card:hover{transform:translateY(-2px)}}
+</style>
+<script>new MutationObserver(()=>{for(const c of document.querySelectorAll('.stack td:not([data-l])')){let i=0,p=c;while(p=p.previousElementSibling)i+=p.colSpan;c.dataset.l=c.closest('table').rows[0].cells[i]?.textContent||''}}).observe(document,{childList:true,subtree:true})</script>
+</head>
+<body>
+<header class="band hero">
+  <div class="wrap">
+    <h1>IB 文憑生的全球大學申請地圖</h1>
+    <p>輸入預估 IB 總分、想讀的領域與每年預算，即時篩出英、美、加、澳、港、新、日、歐 31 所承認 IB 的大學，看分數落點、學費、生活費與截止日。</p>
+    <div class="meta">資料整理日：2026-11-21，以 2027 年入學為目標。學費為國際生每年金額；標示「官方」者已對照官網，標示「估」者為參考值，請以官網為準。</div>
+    <div class="urgent" id="urgent"></div>
+  </div>
+</header>
+
+<main>
+<section class="band" style="padding-top:0">
+ <div class="wrap">
+  <div class="panel">
+   <div class="grid">
+    <div>
+      <label class="l" for="score">預估 IB 總分 (含 TOK/EE)</label>
+      <div class="big"><span id="scoreV">36</span><span style="font-size:18px"> / 45</span></div>
+      <input id="score" type="range" min="24" max="45" step="1" value="36" aria-describedby="scoreH">
+      <div class="small" id="scoreH">落點依各校公布或常見錄取分數區間推算，HL 科目與成績另有要求。</div>
+    </div>
+    <div>
+      <label class="l" for="budget">每年總預算上限 (新台幣，學費＋生活費)</label>
+      <div class="big"><span id="budgetV">不限</span></div>
+      <input id="budget" type="range" min="500000" max="4000000" step="100000" value="4000000">
+      <div class="small">以學費下限＋生活費估算；匯率可在頁面下方調整。</div>
+    </div>
+    <div>
+      <label class="l" for="q">搜尋校名、城市或課程</label>
+      <input id="q" type="search" placeholder="例如：倫敦、Commerce、設計">
+      <label class="l" for="sort" style="margin-top:12px">排序</label>
+      <select id="sort">
+        <option value="fit">分數落點 (穩上→挑戰)</option>
+        <option value="cost">每年總花費 (低→高)</option>
+        <option value="ib">IB 要求 (高→低)</option>
+        <option value="deadline">申請截止日 (近→遠)</option>
+      </select>
+    </div>
+   </div>
+   <div class="grid" style="margin-top:16px">
+    <div><span class="l">區域</span><div class="chips" id="regions"></div></div>
+    <div><span class="l">想讀的領域</span><div class="chips" id="fields"></div></div>
+    <div><span class="l">落點</span><div class="chips" id="fits"></div></div>
+   </div>
+   <div class="overview" id="overview" aria-label="各區域落點分布"></div>
+   <div class="legend" id="legend"></div>
+  </div>
+
+  <div class="bar">
+    <h2 id="count">結果</h2>
+    <button class="btn ghost" id="reset" type="button">清除所有條件</button>
+  </div>
+  <div class="cards" id="cards"></div>
+ </div>
+</section>
+
+<section class="band" id="deadlines" style="background:var(--panel)">
+ <div class="wrap">
+  <h2>2027 入學申請截止日時間軸</h2>
+  <p class="small">依目前篩選結果列出。日期以官網為準，多數學校以當地時間計算；美國 ED/EA 與英國牛劍等 10 月、11 月初的輪次已截止。</p>
+  <ul class="tl" id="tl"></ul>
+ </div>
+</section>
+
+<section class="band">
+ <div class="wrap">
+  <h2>各區域 IB 申請重點</h2>
+  <div class="tips" style="margin-top:16px">
+   <div class="tip"><h3>英國 (UCAS)</h3><p>看「總分＋3 科 HL 成績＋指定 HL 科目」，例如 38 分且 HL 666。最多填 5 個志願，牛津、劍橋與醫學系 10 月 15 日截止，其他科系約 1 月中。需老師提供預估分數 (predicted grades)，部分科系另考 TMUA、LNAT、UCAT 等筆試。</p></div>
+   <div class="tip"><h3>美國 (Common App)</h3><p>沒有 IB 最低分，採綜合審查：在校成績、IB 預估分數、課外活動、文書、推薦信。哈佛、MIT 等校已恢復要求 SAT/ACT，UC 系統不採計。哈佛、MIT 對國際生採需求無關錄取 (need-blind) 並提供全額需求補助，家庭年收入不高時實付金額可能遠低於公告價。</p></div>
+   <div class="tip"><h3>加拿大</h3><p>要求完整 IB 文憑與英文 (HL 或 SL)，以預估分數先發條件式錄取。熱門科系 (商、工、資工) 分數門檻明顯較高。安大略省經 OUAC 申請，1 月中前送件較安全。</p></div>
+   <div class="tip"><h3>澳洲</h3><p>IB 總分會換算為 ATAR 等值分數 (各州招生中心公布對照表)，部分大學直接用 IB 分數。學年 2 月開學，也有 7 月入學；5 月考試的 IB 生通常申請隔年 2 月入學。</p></div>
+   <div class="tip"><h3>香港、新加坡</h3><p>直接向大學申請 (Non-JUPAS / 國際生管道)，輪次早、11 月即有截止。新加坡國立、南洋理工可選「學費補助＋畢業後在新加坡工作 3 年」的方案，學費可省約 4 成。香港 2027 學年非本地生學費全面調漲。</p></div>
+   <div class="tip"><h3>日本、歐洲</h3><p>日本有全英語學位課程 (東大 College of Design、早稻田 SILS、慶應 PEARL)，學費低。荷蘭多數學士課程英語授課，非歐盟學費約每年 1.5–2 萬歐元。德國學士班多為德語授課，IB 科目組合須符合德國 KMK 規定，申請前先查 uni-assist。</p></div>
+  </div>
+  <p class="small" style="margin-top:18px">台灣本地生若同時考慮國內大學：大園高中 IB 專班學生仍可走學測、繁星或特殊選才；國內各大學「國際學士班」多半只收外國學生與僑生，報名前請確認身分資格。</p>
+ </div>
+</section>
+
+<section class="band" style="background:var(--panel)">
+ <div class="wrap">
+  <h2>匯率設定 (1 單位外幣＝多少新台幣)</h2>
+  <p class="small">預設值為概估，請依當天銀行牌告更新；修改後預算與花費會即時重算，並保存在這台裝置的瀏覽器。</p>
+  <div class="rates" id="rates"></div>
+ </div>
+</section>
+
+<section class="band">
+ <div class="wrap">
+  <h2>資料來源與使用說明</h2>
+  <p>學費與分數每年調整，且同一所大學不同科系差異很大。本頁用途是「找方向、排優先順序」，正式申請前請點每張票卡內的官網連結，核對 2027 入學的科系要求、學費與截止日。生活費英國、加拿大、澳洲採各國學生簽證的最低財力證明金額；美國採學校公布的就學總花費扣除學費；其他地區為學校公布值或概估。</p>
+  <ul id="srcs" class="small"></ul>
+ </div>
+</section>
+</main>
+
+<div class="tray" id="tray"><span id="trayT"></span><span style="display:flex;gap:8px"><button class="btn" id="cmpGo" type="button">比較</button><button class="btn ghost" id="cmpClr" type="button" style="color:inherit;border-color:currentColor">清除</button></span></div>
+<div class="modal" id="modal" role="dialog" aria-modal="true" aria-labelledby="mTitle"><div class="sheet"><button class="x" id="mClose" type="button" aria-label="關閉">×</button><div id="mBody"></div></div></div>
+
+<script>
+{
+const TODAY=new Date('2026-11-21T12:00:00+08:00');
+const REG={uk:'英國',us:'美國',ca:'加拿大',au:'澳洲',hk:'香港',sg:'新加坡',jp:'日本',eu:'歐洲'};
+const FLD={biz:'商管經濟',eng:'工程',cs:'資訊',sci:'理學',med:'醫學',law:'法律',hum:'人文社科',art:'設計藝術'};
+const FIT={safe:['穩上','var(--ok)'],match:['適配','var(--match)'],reach:['挑戰','var(--reach)'],far:['差距大','var(--far)'],hol:['綜合評估','var(--hol)']};
+const CUR={GBP:'£',USD:'US$',CAD:'C$',AUD:'A$',HKD:'HK$',SGD:'S$',JPY:'¥',EUR:'€'};
+const RATE0={GBP:42,USD:32,CAD:23,AUD:21,HKD:4.1,SGD:24.5,JPY:0.21,EUR:37};
+const UKL=14130,UKO=10827,CAL=23448,AUL=29710;
+// t:[min,max,src] l:[amount,src]  src: o=官方 e=估
+const U=[
+{id:'ox',r:'uk',n:'University of Oxford',z:'牛津大學',c:'牛津',ib:[38,40],hl:'HL 666–776',f:['biz','eng','cs','sci','med','law','hum'],cur:'GBP',t:[37380,62820,'o'],ty:'2026/27',l:[UKO,'o'],ln:'UKVI 倫敦以外 9 個月',dl:'2026-10-15',dln:'UCAS (牛劍)',en:'英語',p:'PPE、法律、醫學、工程；書院制、導師課 (tutorial)',x:'多數科系需筆試與面試',url:'https://www.ox.ac.uk/admissions/undergraduate'},
+{id:'cam',r:'uk',n:'University of Cambridge',z:'劍橋大學',c:'劍橋',ib:[40,42],hl:'HL 776–777',f:['biz','eng','cs','sci','med','law','hum','art'],cur:'GBP',t:[29052,70554,'o'],ty:'2026/27',l:[UKO,'o'],ln:'UKVI 倫敦以外 9 個月',dl:'2026-10-15',dln:'UCAS (牛劍)',en:'英語',p:'自然科學、工程、經濟、數學、建築',x:'多數科系需筆試與面試；書院制',url:'https://www.undergraduate.study.cam.ac.uk/'},
+{id:'ic',r:'uk',n:'Imperial College London',z:'倫敦帝國學院',c:'倫敦',ib:[38,42],hl:'HL 666–776 (理科為主)',f:['eng','cs','sci','med','biz'],cur:'GBP',t:[40000,55000,'e'],ty:'2027/28 估',l:[UKL,'o'],ln:'UKVI 倫敦 9 個月',dl:'2027-01-13',dln:'UCAS 一般截止',en:'英語',p:'工程、資工、醫學、自然科學；理工專精',x:'數學、資工常需 TMUA',url:'https://www.imperial.ac.uk/study/'},
+{id:'lse',r:'uk',n:'London School of Economics',z:'倫敦政經學院',c:'倫敦',ib:[37,39],hl:'HL 666 或 766',f:['biz','law','hum'],cur:'GBP',t:[28000,32000,'e'],ty:'2027/28 估',l:[UKL,'o'],ln:'UKVI 倫敦 9 個月',dl:'2027-01-13',dln:'UCAS (官網公告)',en:'英語',p:'經濟、金融、國際關係、法律、管理',x:'經濟相關科系多要求 TMUA 與 HL 數學',url:'https://www.lse.ac.uk/study-at-lse/Undergraduate'},
+{id:'ucl',r:'uk',n:'University College London',z:'倫敦大學學院',c:'倫敦',ib:[34,40],hl:'依科系 HL 555–766',f:['biz','eng','cs','sci','med','law','hum','art'],cur:'GBP',t:[32000,45000,'e'],ty:'2026/27 起',l:[UKL,'o'],ln:'UKVI 倫敦 9 個月',dl:'2027-01-13',dln:'UCAS 一般截止',en:'英語',p:'建築 (Bartlett)、心理、經濟、Arts & Sciences',x:'國際生學費就讀期間凍漲 (cohort guarantee)',url:'https://www.ucl.ac.uk/prospective-students/undergraduate'},
+{id:'kcl',r:'uk',n:"King's College London",z:'倫敦國王學院',c:'倫敦',ib:[35,38],hl:'HL 665–666',f:['biz','sci','med','law','hum'],cur:'GBP',t:[27000,38000,'e'],ty:'2027/28 估',l:[UKL,'o'],ln:'UKVI 倫敦 9 個月',dl:'2027-01-13',dln:'UCAS 一般截止',en:'英語',p:'法律、國際關係、醫護、戰爭研究',x:'',url:'https://www.kcl.ac.uk/study/undergraduate'},
+{id:'ed',r:'uk',n:'University of Edinburgh',z:'愛丁堡大學',c:'愛丁堡',ib:[34,40],hl:'依科系 HL 555–776',f:['biz','eng','cs','sci','med','law','hum','art'],cur:'GBP',t:[27000,38000,'e'],ty:'2027/28 估',l:[UKO,'o'],ln:'UKVI 倫敦以外 9 個月',dl:'2027-01-13',dln:'UCAS 一般截止',en:'英語',p:'資訊 (AI)、醫學、藝術設計、蘇格蘭學制 4 年',x:'蘇格蘭學士多為 4 年，總花費需乘 4',url:'https://study.ed.ac.uk/undergraduate/entry-requirements/international/ib'},
+{id:'man',r:'uk',n:'University of Manchester',z:'曼徹斯特大學',c:'曼徹斯特',ib:[32,37],hl:'HL 555–666',f:['biz','eng','cs','sci','med','law','hum'],cur:'GBP',t:[27000,37000,'e'],ty:'2027/28 估',l:[UKO,'o'],ln:'UKVI 倫敦以外 9 個月',dl:'2027-01-13',dln:'UCAS 一般截止',en:'英語',p:'工程、材料、商管；生活費較倫敦低',x:'',url:'https://www.manchester.ac.uk/study/undergraduate/'},
+{id:'hv',r:'us',n:'Harvard University',z:'哈佛大學',c:'劍橋 (麻州)',ib:null,hl:'無最低分，看 IB 預估分數與課程難度',f:['biz','eng','cs','sci','hum','law'],cur:'USD',t:[62226,62226,'o'],ty:'2026-27',l:[29408,'o'],ln:'住宿、餐費、健康與學生服務費 (官方總花費 US$91,634 扣學費)',dl:'2027-01-01',dln:'Regular Decision',en:'英語',p:'文理學院制，入學後再選主修',x:'需 SAT/ACT；國際生 need-blind，提供需求補助',url:'https://college.harvard.edu/admissions'},
+{id:'mit',r:'us',n:'Massachusetts Institute of Technology',z:'麻省理工學院',c:'劍橋 (麻州)',ib:null,hl:'無最低分，重數理 HL',f:['eng','cs','sci','biz'],cur:'USD',t:[66720,66720,'o'],ty:'2026-27',l:[26040,'o'],ln:'官方就學總花費 US$92,760 扣學費',dl:'2027-01-05',dln:'Regular Action (估)',en:'英語',p:'工程、資工、物理、數學',x:'需 SAT/ACT；國際生 need-blind',url:'https://mitadmissions.org/'},
+{id:'ucb',r:'us',n:'UC Berkeley',z:'加州大學柏克萊分校',c:'柏克萊',ib:null,hl:'無最低分；不採計 SAT',f:['biz','eng','cs','sci','hum'],cur:'USD',t:[57202,57202,'o'],ty:'2026-27 新生',l:[26000,'e'],ln:'宿舍與餐費等概估',dl:'2026-11-30',dln:'UC 統一申請 (請確認最新日期)',en:'英語',p:'資工 (EECS)、商學 (Haas)、理學',x:'UC 系統一次申請可投多校區；學費為非加州居民價',url:'https://admissions.berkeley.edu/'},
+{id:'ucla',r:'us',n:'UCLA',z:'加州大學洛杉磯分校',c:'洛杉磯',ib:null,hl:'無最低分；不採計 SAT',f:['biz','eng','cs','sci','hum','art'],cur:'USD',t:[57000,57000,'e'],ty:'2026-27 估',l:[27770,'e'],ln:'官方住校總花費 US$84,770 扣學費估算',dl:'2026-11-30',dln:'UC 統一申請 (請確認最新日期)',en:'英語',p:'心理、經濟、電影、工程',x:'',url:'https://admission.ucla.edu/'},
+{id:'uoft',r:'ca',n:'University of Toronto',z:'多倫多大學',c:'多倫多',ib:[32,38],hl:'需完整 IB 文憑，英文 HL/SL',f:['biz','eng','cs','sci','med','hum','art'],cur:'CAD',t:[60000,70000,'e'],ty:'2026-27 參考',l:[CAL,'o'],ln:'IRCC 最低財力 (2026/9 起)',dl:'2027-01-15',dln:'OUAC (建議 11 月前)',en:'英語',p:'三校區；工程、資工、Rotman 商學',x:'',url:'https://future.utoronto.ca/'},
+{id:'ubc',r:'ca',n:'University of British Columbia',z:'英屬哥倫比亞大學',c:'溫哥華',ib:[30,38],hl:'需完整 IB 文憑',f:['biz','eng','cs','sci','hum','art'],cur:'CAD',t:[50000,66678,'e'],ty:'2026-27 參考',l:[CAL,'o'],ln:'IRCC 最低財力 (2026/9 起)',dl:'2027-01-15',dln:'官網申請',en:'英語',p:'Sauder 商學 (C$66,678)、資工、林學',x:'需繳交個人簡答 (Personal profile)',url:'https://you.ubc.ca/'},
+{id:'mcg',r:'ca',n:'McGill University',z:'麥基爾大學',c:'蒙特婁',ib:[33,38],hl:'依科系',f:['biz','eng','cs','sci','med','law','hum'],cur:'CAD',t:[54000,68000,'e'],ty:'2026-27 參考',l:[CAL,'e'],ln:'魁北克財力要求另計，以 IRCC 值概估',dl:'2027-01-15',dln:'官網申請',en:'英語 (城市為法語區)',p:'文學院 (BA 約 C$54,000)、工程、管理',x:'',url:'https://www.mcgill.ca/undergraduate-admissions/'},
+{id:'mel',r:'au',n:'University of Melbourne',z:'墨爾本大學',c:'墨爾本',ib:[28,38],hl:'依科系，數學常為先修',f:['biz','eng','cs','sci','hum','art'],cur:'AUD',t:[48000,55000,'e'],ty:'2026 參考',l:[AUL,'o'],ln:'澳洲學生簽證財力門檻',dl:'2027-10-31',dln:'2028 年 2 月入學 (估)',en:'英語',p:'墨爾本模式：3 年廣域學士＋研究所專業；商學約 A$52,000',x:'國際生直接向大學申請',url:'https://study.unimelb.edu.au/'},
+{id:'syd',r:'au',n:'University of Sydney',z:'雪梨大學',c:'雪梨',ib:[30,38],hl:'依科系',f:['biz','eng','cs','sci','med','law','hum','art'],cur:'AUD',t:[50000,60000,'e'],ty:'2026 參考',l:[AUL,'o'],ln:'澳洲學生簽證財力門檻',dl:'2027-11-30',dln:'2028 年 2 月入學 (估)',en:'英語',p:'商學 (IB 約 34–36)、法律、醫學',x:'',url:'https://www.sydney.edu.au/study/'},
+{id:'unsw',r:'au',n:'UNSW Sydney',z:'新南威爾斯大學',c:'雪梨',ib:[32,38],hl:'工程需 HL 數學、物理',f:['biz','eng','cs','sci','med','law','art'],cur:'AUD',t:[52000,60000,'e'],ty:'2026 參考',l:[AUL,'o'],ln:'澳洲學生簽證財力門檻',dl:'2027-11-30',dln:'2028 年 2 月入學 (估)',en:'英語',p:'工程 (約 A$58,000)、資工、商學',x:'',url:'https://www.unsw.edu.au/study'},
+{id:'anu',r:'au',n:'Australian National University',z:'澳洲國立大學',c:'坎培拉',ib:[29,37],hl:'依科系',f:['biz','eng','cs','sci','law','hum'],cur:'AUD',t:[47000,55000,'e'],ty:'2026 參考',l:[AUL,'o'],ln:'澳洲學生簽證財力門檻',dl:'2027-11-30',dln:'2028 年 2 月入學 (估)',en:'英語',p:'政治、國際關係、理學；首都小城',x:'',url:'https://study.anu.edu.au/'},
+{id:'hku',r:'hk',n:'The University of Hong Kong',z:'香港大學',c:'香港',ib:[36,42],hl:'依科系，熱門科系常需 38+',f:['biz','eng','cs','sci','med','law','hum','art'],cur:'HKD',t:[224000,249000,'o'],ty:'2026 入學 (2027 調漲)',l:[66000,'e'],ln:'依中大公布生活費比例概估',dl:'2026-11-25',dln:'首輪評估截止 (之後仍可申請但名額較少)',en:'英語',p:'醫學、法律、商學、建築',x:'2027 學年非本地生學費最高調漲約 26%，醫牙科大漲',url:'https://admissions.hku.hk/apply/international-qualifications'},
+{id:'cuhk',r:'hk',n:'The Chinese University of Hong Kong',z:'香港中文大學',c:'香港',ib:[34,42],hl:'依科系',f:['biz','eng','cs','sci','med','law','hum','art'],cur:'HKD',t:[230000,230000,'o'],ty:'2027-28',l:[66000,'o'],ln:'官方估全年 HK$280,000 (2026-27) 扣學費',dl:'2027-01-15',dln:'分輪次，請見官網 (估)',en:'英語＋中文',p:'醫學、環球商業、書院制；宿舍床位多',x:'2027 年級學費年調幅上限 3%',url:'https://admission.cuhk.edu.hk/international/fees.html'},
+{id:'hkust',r:'hk',n:'HKUST',z:'香港科技大學',c:'香港',ib:[34,40],hl:'理工科需 HL 數學',f:['biz','eng','cs','sci'],cur:'HKD',t:[200000,250000,'e'],ty:'2027-28 估',l:[60000,'e'],ln:'生活費概估；非本地生前兩年保證宿舍',dl:'2026-11-25',dln:'Priority Round (官方)',en:'英語',p:'工程、資工、商學、金融科技',x:'設有全額學費＋生活津貼獎學金',url:'https://join.hkust.edu.hk/'},
+{id:'cityu',r:'hk',n:'City University of Hong Kong',z:'香港城市大學',c:'香港',ib:[30,36],hl:'依科系',f:['biz','eng','cs','sci','law','art'],cur:'HKD',t:[240000,240000,'o'],ty:'2027/28',l:[75800,'o'],ln:'官方生活費 HK$50–60k＋宿舍約 HK$20,800',dl:'2027-01-15',dln:'官網申請 (估)',en:'英語',p:'創意媒體、資工、商學、獸醫 (另計)',x:'',url:'https://www.cityu.edu.hk/admo/fees-and-scholarships'},
+{id:'nus',r:'sg',n:'National University of Singapore',z:'新加坡國立大學',c:'新加坡',ib:[36,42],hl:'依科系',f:['biz','eng','cs','sci','med','law','hum','art'],cur:'SGD',t:[33400,44450,'e'],ty:'全額價 (未申請補助)',l:[15000,'e'],ln:'生活費概估',dl:'2027-02-20',dln:'國際生申請 (估)',en:'英語',p:'資工、商學、法律；可申請學費補助',x:'接受 MOE 學費補助約省 45%，須在新加坡工作 3 年',url:'https://www.nus.edu.sg/oam/'},
+{id:'ntu',r:'sg',n:'Nanyang Technological University',z:'南洋理工大學',c:'新加坡',ib:[34,41],hl:'依科系',f:['biz','eng','cs','sci','med','art'],cur:'SGD',t:[30000,42000,'e'],ty:'全額價 估',l:[14000,'e'],ln:'生活費概估',dl:'2027-02-20',dln:'國際生申請 (估)',en:'英語',p:'工程、資工、商學、傳播',x:'同樣有學費補助＋服務年限方案',url:'https://www.ntu.edu.sg/admissions/undergraduate'},
+{id:'utd',r:'jp',n:'UTokyo College of Design',z:'東京大學 College of Design',c:'東京',ib:null,hl:'IB 為指定標準化考試之一，另需英檢與面試',f:['art','eng','hum','sci'],cur:'JPY',t:[642960,642960,'o'],ty:'2025 年基準，2027 以簡章為準',l:[1500000,'e'],ln:'東京生活費概估',dl:'2026-12-01',dln:'截止日為估計；簡章已於 2026/9/14 公布，請立即確認',en:'全英語',p:'2027 年 9 月新設、5 年學士＋碩士一貫，招 100 人',x:'另有入學金約 ¥282,000；東大原 PEAK 已停招',url:'https://design.adm.u-tokyo.ac.jp/'},
+{id:'wsils',r:'jp',n:'Waseda University SILS',z:'早稻田大學 國際教養學部',c:'東京',ib:null,hl:'書面審查，IB 成績為主要學歷證明',f:['hum','biz'],cur:'JPY',t:[1400000,1700000,'e'],ty:'估',l:[1500000,'e'],ln:'東京生活費概估',dl:'2027-01-31',dln:'9 月入學 (估)',en:'全英語',p:'文理通識、一年海外留學',x:'4 月與 9 月兩次入學',url:'https://www.waseda.jp/inst/admission/en/undergraduate/english/'},
+{id:'pearl',r:'jp',n:'Keio University PEARL',z:'慶應義塾大學 PEARL 經濟',c:'東京',ib:[34,40],hl:'須提交 IB 或 SAT',f:['biz'],cur:'JPY',t:[1300000,1500000,'e'],ty:'估',l:[1500000,'e'],ln:'東京生活費概估',dl:'2027-01-31',dln:'2027 年 9 月入學 (估)',en:'全英語',p:'經濟學全英語學位',x:'須於 2027/9/21 前取得 IB 文憑，否則取消入學',url:'https://www.keio.ac.jp/en/admissions/undergraduate/pearl/'},
+{id:'uva',r:'eu',n:'University of Amsterdam',z:'阿姆斯特丹大學',c:'阿姆斯特丹 (荷蘭)',ib:[30,38],hl:'依科系，部分要求 HL 數學',f:['biz','sci','hum','law','cs'],cur:'EUR',t:[15000,20000,'e'],ty:'非歐盟 估',l:[15000,'e'],ln:'荷蘭生活費概估',dl:'2027-01-15',dln:'限額科系 1/15、LAS 與 PPLE 2/1、一般 5/1',en:'英語',p:'心理、經濟商管、PPLE、Liberal Arts',x:'IB 含英文科即符合英語要求；申請費 €100',url:'https://www.uva.nl/en/education/admissions/bachelors.html'},
+{id:'lei',r:'eu',n:'Leiden University',z:'萊頓大學',c:'萊頓／海牙 (荷蘭)',ib:[30,37],hl:'依科系',f:['law','hum','sci'],cur:'EUR',t:[16000,22000,'e'],ty:'非歐盟 估',l:[14000,'e'],ln:'荷蘭生活費概估',dl:'2027-01-15',dln:'限額科系 1/15、一般 5/1 (估)',en:'英語',p:'國際關係、安全研究、海牙校區',x:'',url:'https://www.universiteitleiden.nl/en/education'},
+{id:'tum',r:'eu',n:'Technical University of Munich',z:'慕尼黑工業大學',c:'慕尼黑 (德國)',ib:[32,38],hl:'科目組合須符合德國 KMK 規定',f:['eng','cs','sci','biz'],cur:'EUR',t:[4600,6800,'o'],ty:'2027/28 冬季學期起',l:[12000,'e'],ln:'德國凍結帳戶概估',dl:'2027-07-15',dln:'多數科系 (部分 5/31)',en:'多為德語，少數英語',p:'工程、資工；Management & Technology 有英語學程',x:'學費每學期 €2,300 或 €3,400；須先辦 uni-assist VPD',url:'https://www.tum.de/en/studies/tuition-fees'}
+];
+const SRC=[
+['UCL 2026-27 學費表','https://www.ucl.ac.uk/study/student-finances/tuition-fees/fee-schedules/fee-schedules-2026-2027/undergraduate-fees-2026-2027'],
+['LSE 入學建議 (2027 入學截止與標準)','https://www.lse.ac.uk/study-at-lse/Undergraduate/Teachers-schools-parents/Information-for-teachers-and-schools/admissions-advice'],
+['GOV.UK 學生簽證財力要求','https://www.gov.uk/student-visa/money'],
+['Harvard 2026-27 學費與總花費','https://registrar.fas.harvard.edu/tuition-and-fees'],
+['MIT 2026-27 就學總花費','https://sfs.mit.edu/undergraduate-students/the-cost-of-attendance/'],
+['UC 2026-27 各校區費用','https://ucop.edu/operating-budget/_files/fees/202627/2026-27-total-charges-by-campus.pdf'],
+['UCLA 就學總花費','https://financialaid.ucla.edu/cost'],
+['HKU 學費與生活費','https://www.admissions.hku.hk/fees-and-scholarships/tuition-and-living-expenses'],
+['CUHK 非本地生學費試算','https://admission.cuhk.edu.hk/application/overseas-other-qualifications-non-local-international-team/fees-calculator/'],
+['CityU 學費與獎學金','https://www.cityu.edu.hk/admo/fees-and-scholarships'],
+['HKUST 2027 國際學歷入學簡介','https://publication.join.ust.hk/view/14363550/10-11'],
+['UTokyo College of Design','https://design.adm.u-tokyo.ac.jp/'],
+['Keio PEARL 2027 年 9 月入學簡章','https://www.keio.ac.jp/en/admissions/faculty/examinations/pearl/'],
+['UvA 學士申請截止日','https://www.uva.nl/en/education/admissions/bachelors/applying-for-a-degree-programme.html'],
+['TUM 非歐盟學費','https://www.tum.de/en/studies/tuition-fees'],
+['IB Australasia：IB 轉換 ATAR','https://ibaustralasia.org/university-entrance/']
+];
+
+const $=s=>document.querySelector(s);
+const store={get(k,d){try{const v=localStorage.getItem('ibmap-'+k);return v?JSON.parse(v):d}catch(e){return d}},set(k,v){try{localStorage.setItem('ibmap-'+k,JSON.stringify(v))}catch(e){}}};
+const S=Object.assign({score:36,budget:4000000,q:'',sort:'fit',regions:[],fields:[],fits:[],cmp:[]},store.get('state',{}));
+const rate=Object.assign({},RATE0,store.get('rate',{}));
+const twd=(v,c)=>v*rate[c];
+const fmtT=v=>v>=10000?Math.round(v/10000).toLocaleString()+' 萬':Math.round(v).toLocaleString();
+const fmtL=(v,c)=>CUR[c]+Math.round(v).toLocaleString();
+const fit=u=>{if(!u.ib)return'hol';const s=S.score;if(s>=u.ib[1]+1)return'safe';if(s>=u.ib[0])return'match';if(s>=u.ib[0]-2)return'reach';return'far'};
+const cost=u=>[twd(u.t[0]+u.l[0],u.cur),twd(u.t[1]+u.l[0],u.cur)];
+const days=u=>Math.round((new Date(u.dl+'T23:59:00+08:00')-TODAY)/864e5);
+const badge=s=>s==='o'?'<span class="off">官方</span>':'<span class="est">估</span>';
+const ORD={safe:0,match:1,reach:2,hol:3,far:4};
+
+function chips(el,obj,key){el.innerHTML=Object.entries(obj).map(([k,v])=>`<button type="button" class="chip" data-k="${k}" aria-pressed="${S[key].includes(k)}">${Array.isArray(v)?v[0]:v}</button>`).join('');
+ el.onclick=e=>{const b=e.target.closest('.chip');if(!b)return;const k=b.dataset.k,a=S[key];const i=a.indexOf(k);i<0?a.push(k):a.splice(i,1);b.setAttribute('aria-pressed',i<0);render()}}
+
+function list(){const q=S.q.trim().toLowerCase();return U.filter(u=>(!S.regions.length||S.regions.includes(u.r))&&(!S.fields.length||u.f.some(x=>S.fields.includes(x)))&&(!S.fits.length||S.fits.includes(fit(u)))&&(S.budget>=4000000||cost(u)[0]<=S.budget)&&(!q||(u.n+u.z+u.c+u.p+u.x).toLowerCase().includes(q)))
+ .sort((a,b)=>S.sort==='cost'?cost(a)[0]-cost(b)[0]:S.sort==='ib'?((b.ib?b.ib[0]:0)-(a.ib?a.ib[0]:0)):S.sort==='deadline'?((days(a)<0?1e4:days(a))-(days(b)<0?1e4:days(b))):(ORD[fit(a)]-ORD[fit(b)])||((a.ib?a.ib[0]:0)-(b.ib?b.ib[0]:0)))}
+
+function card(u){const f=fit(u),[c0,c1]=cost(u),d=days(u),on=S.cmp.includes(u.id);
+ const t=u.t[0]===u.t[1]?fmtL(u.t[0],u.cur):fmtL(u.t[0],u.cur)+'–'+fmtL(u.t[1],u.cur).replace(CUR[u.cur],'');
+ return `<article class="card"><div class="top"><div><h3>${u.z}</h3><div class="zh">${u.n}・${u.c}</div></div><span class="stampx" style="color:${FIT[f][1]}">${FIT[f][0]}</span></div>
+ <dl class="kv"><dt>IB 要求</dt><dd>${u.ib?`<b class="num">${u.ib[0]}–${u.ib[1]} 分</b>，`:''}${u.hl}</dd>
+ <dt>學費/年</dt><dd><span class="num">${t}</span>${badge(u.t[2])}<div class="small">${u.ty}</div></dd>
+ <dt>生活費/年</dt><dd><span class="num">${fmtL(u.l[0],u.cur)}</span>${badge(u.l[1])}</dd>
+ <dt>合計台幣</dt><dd><b class="num">${fmtT(c0)}${c1>c0+5000?'–'+fmtT(c1):''} 元</b></dd>
+ <dt>截止日</dt><dd><span class="num">${u.dl.replace(/-/g,'/')}</span>${d<0?'<span class="st closed">已截止</span>':d<=14?`<span class="st soon">剩 ${d} 天</span>`:''}</dd></dl>
+ <div>${u.f.map(x=>`<span class="tag">${FLD[x]}</span>`).join('')}</div>
+ <div class="acts"><button class="btn" type="button" data-d="${u.id}">詳細資料</button><button class="btn ghost" type="button" data-c="${u.id}" aria-pressed="${on}">${on?'已加入比較':'加入比較'}</button></div></article>`}
+
+function overview(L){const rows=Object.keys(REG).map(r=>{const us=L.filter(u=>u.r===r);if(!us.length)return'';const n=us.length;
+ const seg=Object.keys(FIT).map(k=>{const c=us.filter(u=>fit(u)===k).length;return c?`<span title="${FIT[k][0]} ${c} 所" style="width:${c/n*100}%;background:${FIT[k][1]}"></span>`:''}).join('');
+ return `<div class="orow"><span>${REG[r]}</span><div class="obar">${seg}</div><span class="num small">${n} 所</span></div>`}).join('');
+ $('#overview').innerHTML=rows||'';
+ $('#legend').innerHTML=Object.values(FIT).map(([n,c])=>`<span><i class="dot" style="background:${c}"></i>${n}</span>`).join('')+'<span>（依目前 IB 預估分數 '+S.score+' 分）</span>'}
+
+function timeline(L){const a=[...L].sort((x,y)=>x.dl.localeCompare(y.dl));
+ $('#tl').innerHTML=a.map(u=>{const d=days(u);const st=d<0?'<span class="st closed">已截止</span>':d<=14?`<span class="st soon">剩 ${d} 天</span>`:`<span class="st open">${d} 天後</span>`;
+ return `<li><span class="d">${u.dl.slice(5).replace('-','/')}<span class="small" style="display:block;font-family:inherit;font-weight:400">${u.dl.slice(0,4)}</span></span><span><b>${u.z}</b>${st}<br><span class="small">${u.dln}</span></span></li>`}).join('')||'<li>沒有符合條件的學校</li>'}
+
+function urgent(){const s=U.filter(u=>{const d=days(u);return d>=0&&d<=14}).sort((a,b)=>a.dl.localeCompare(b.dl));
+ $('#urgent').innerHTML=s.length?`<span><b>近 14 天內截止：</b>${s.map(u=>`${u.z} (${u.dl.slice(5).replace('-','/')})`).join('、')}。這些日期部分為估計，請今天就到官網確認。</span>`:'';
+ $('#urgent').style.display=s.length?'flex':'none'}
+
+function render(){const L=list();store.set('state',S);
+ $('#scoreV').textContent=S.score;$('#budgetV').textContent=S.budget>=4000000?'不限':fmtT(S.budget)+' 元';
+ $('#count').textContent=`符合條件：${L.length} 所`;
+ $('#cards').innerHTML=L.length?L.map(card).join(''):'<div class="empty">沒有符合的學校。試著放寬預算、領域或落點條件。</div>';
+ overview(L);timeline(L);
+ $('#tray').classList.toggle('on',S.cmp.length>0);$('#trayT').textContent=`已選 ${S.cmp.length} / 3 所：`+S.cmp.map(i=>U.find(u=>u.id===i).z).join('、')}
+
+function detail(u){const f=fit(u),[c0,c1]=cost(u);
+ $('#mBody').innerHTML=`<h2 id="mTitle">${u.z}</h2><p class="small">${u.n}・${u.c}・${REG[u.r]}・授課語言：${u.en}</p>
+ <p><span class="stampx" style="color:${FIT[f][1]};display:inline-block">${FIT[f][0]}</span>　${u.ib?`你的預估 ${S.score} 分，常見錄取區間 ${u.ib[0]}–${u.ib[1]} 分。`:'此校不設 IB 最低分，以綜合審查決定。'}</p>
+ <table class="stack"><thead><tr><th>項目</th><th>內容</th></tr></thead><tbody>
+ <tr><td>IB 分數與 HL</td><td>${u.ib?u.ib[0]+'–'+u.ib[1]+' 分；':''}${u.hl}</td></tr>
+ <tr><td>特色科系與課程</td><td>${u.p}</td></tr>
+ <tr><td>可選領域</td><td>${u.f.map(x=>FLD[x]).join('、')}</td></tr>
+ <tr><td>國際生學費/年</td><td>${fmtL(u.t[0],u.cur)}${u.t[1]!==u.t[0]?' – '+fmtL(u.t[1],u.cur):''} ${badge(u.t[2])}（${u.ty}）</td></tr>
+ <tr><td>生活費/年</td><td>${fmtL(u.l[0],u.cur)} ${badge(u.l[1])}<br><span class="small">${u.ln}</span></td></tr>
+ <tr><td>每年合計 (台幣)</td><td><b>${fmtT(c0)}${c1>c0+5000?' – '+fmtT(c1):''} 元</b><br><span class="small">四年概估約 ${fmtT(c0*4)}${c1>c0+5000?' – '+fmtT(c1*4):''} 元 (未計漲幅)</span></td></tr>
+ <tr><td>申請截止</td><td>${u.dl.replace(/-/g,'/')}・${u.dln}</td></tr>
+ <tr><td>注意事項</td><td>${u.x||'—'}</td></tr></tbody></table>
+ <p style="margin-top:16px"><a href="${u.url}" target="_blank" rel="noopener">前往官網核對 2027 入學資訊 →</a></p>`;
+ $('#modal').classList.add('on');$('#mClose').focus()}
+
+function compare(){const us=S.cmp.map(i=>U.find(u=>u.id===i));const row=(h,fn)=>`<tr><td>${h}</td>${us.map(u=>`<td>${fn(u)}</td>`).join('')}</tr>`;
+ $('#mBody').innerHTML=`<h2 id="mTitle">比較 ${us.length} 所學校</h2><div class="scroll" style="margin-top:14px"><table><thead><tr><th>項目</th>${us.map(u=>`<th>${u.z}</th>`).join('')}</tr></thead><tbody>
+ ${row('落點',u=>`<b style="color:${FIT[fit(u)][1]}">${FIT[fit(u)][0]}</b>`)}${row('IB 要求',u=>(u.ib?u.ib[0]+'–'+u.ib[1]+' 分<br>':'')+`<span class="small">${u.hl}</span>`)}
+ ${row('學費/年',u=>fmtL(u.t[0],u.cur)+(u.t[1]!==u.t[0]?'–'+fmtL(u.t[1],u.cur):'')+badge(u.t[2]))}${row('生活費/年',u=>fmtL(u.l[0],u.cur)+badge(u.l[1]))}
+ ${row('合計台幣/年',u=>`<b class="num">${fmtT(cost(u)[0])}${cost(u)[1]>cost(u)[0]+5000?'–'+fmtT(cost(u)[1]):''} 元</b>`)}${row('截止日',u=>u.dl.replace(/-/g,'/'))}
+ ${row('授課語言',u=>u.en)}${row('特色',u=>u.p)}${row('官網',u=>`<a href="${u.url}" target="_blank" rel="noopener">開啟</a>`)}</tbody></table></div>`;
+ $('#modal').classList.add('on');$('#mClose').focus()}
+
+function rates(){$('#rates').innerHTML=Object.keys(RATE0).map(c=>`<label><span class="l">${c} (${CUR[c]})</span><input type="number" step="0.01" min="0" data-r="${c}" value="${rate[c]}"></label>`).join('');
+ $('#rates').oninput=e=>{const c=e.target.dataset.r;const v=parseFloat(e.target.value);if(c&&v>0){rate[c]=v;store.set('rate',rate);render()}}}
+
+chips($('#regions'),REG,'regions');chips($('#fields'),FLD,'fields');chips($('#fits'),FIT,'fits');
+$('#score').value=S.score;$('#budget').value=S.budget;$('#q').value=S.q;$('#sort').value=S.sort;
+$('#score').oninput=e=>{S.score=+e.target.value;render()};$('#budget').oninput=e=>{S.budget=+e.target.value;render()};
+$('#q').oninput=e=>{S.q=e.target.value;render()};$('#sort').onchange=e=>{S.sort=e.target.value;render()};
+$('#reset').onclick=()=>{Object.assign(S,{budget:4000000,q:'',sort:'fit',regions:[],fields:[],fits:[]});$('#budget').value=4e6;$('#q').value='';$('#sort').value='fit';document.querySelectorAll('.chip').forEach(b=>b.setAttribute('aria-pressed','false'));render()};
+$('#cards').onclick=e=>{const d=e.target.closest('[data-d]'),c=e.target.closest('[data-c]');
+ if(d)detail(U.find(u=>u.id===d.dataset.d));
+ if(c){const id=c.dataset.c,i=S.cmp.indexOf(id);if(i>=0)S.cmp.splice(i,1);else if(S.cmp.length<3)S.cmp.push(id);render()}};
+$('#cmpGo').onclick=compare;$('#cmpClr').onclick=()=>{S.cmp=[];render()};
+const close=()=>$('#modal').classList.remove('on');
+$('#mClose').onclick=close;$('#modal').onclick=e=>{if(e.target.id==='modal')close()};document.addEventListener('keydown',e=>{if(e.key==='Escape')close()});
+$('#srcs').innerHTML=SRC.map(([t,h])=>`<li><a href="${h}" target="_blank" rel="noopener">${t}</a></li>`).join('');
+rates();urgent();render();
+}
+</script>
+</body>
+</html>
